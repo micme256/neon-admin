@@ -1,0 +1,30 @@
+{
+  "name": "admin-side",
+  "version": "1.0.0",
+  "scripts": {
+    "glogin": "clasp login",
+    "glogout": "clasp logout",
+    "gpull": "clasp pull",
+    "gpush": "clasp push",
+    "gstart": "clasp push --watch",
+    "gcreate": "clasp create --title admin --parentId 12F7_qbhviFAh1vtytGmAXZvSWBLBwbzejV1ddBUYOMw --rootDir ./appscript",
+    "start": "parcel src/index.html --dist-dir ./appscript",
+    "build": "parcel build  src/index.html --dist-dir ./appscript"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@google/clasp": "^2.5.0",
+    "@parcel/transformer-sass": "^2.13.3",
+    "@types/google-apps-script": "^1.0.91",
+    "parcel": "^2.13.3",
+    "process": "^0.11.10"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^6.28.2"
+  }
+}
