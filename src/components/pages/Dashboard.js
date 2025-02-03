@@ -2,8 +2,12 @@ import React from "react";
 import KeyMetrics from "../ui-components/KeyMetrics";
 import Contribution from "../ui-components/Contribution";
 import TransactionsForm from "../elements/TransactionsForm";
+import { useContext } from "react";
+import { MemberContext } from "../../App";
+import { getInputAttributes } from "../helper-functions/getInputAttributes";
 
 const Dashboard = () => {
+  const { members } = useContext(MemberContext);
   const contributions = [
     //DUMMY CONTENT
     ["Member ID", "Name", "Savings", "Current Month"],
@@ -24,26 +28,13 @@ const Dashboard = () => {
     ["NEON/016", "SEMAYENGO", 820000, "-"],
     ["NEON/017", "SEBAGALA", 370000, "-"],
   ];
-  const inputAttributes = [
-    {
-      type: "select",
-      label: "Member ID",
-      name: "member-id",
-      options: contributions.slice(1).map((Contribution) => Contribution[0]),
-      value: "",
-    },
-    {
-      type: "number",
-      label: "Amount",
-      name: "amount",
-    },
-  ];
+
   return (
     <>
       <KeyMetrics />
       <Contribution contributions={contributions} />
       <TransactionsForm
-        inputAttributes={inputAttributes}
+        transactionType={"savings"}
         formHeader="NEW CONTRIBUTION"
       />
     </>

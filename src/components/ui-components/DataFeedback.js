@@ -1,13 +1,21 @@
 import React from "react";
 
-const DataFeedback = ({ response, onClose }) => {
-  if (!response || response.status !== "success") return null;
+const DataFeedback = ({ response, onClose, onEdit, onUndo, undoSuccess }) => {
+  if (!response || response.status !== "success") {
+    console.log(response.status);
+    return null;
+  }
 
   const { message, data: addedData } = response;
+  console.log(response.status);
   return (
     <div className="success-modal">
       <div className="success-content">
-        <h2>✅ Submission Successful!</h2>
+        <h2>
+          {undoSuccess
+            ? "⏪ Transaction Deleted!"
+            : "✅ Submission Successful!"}
+        </h2>
         <p>{message}</p>
         <table>
           <tbody>
@@ -22,11 +30,18 @@ const DataFeedback = ({ response, onClose }) => {
           </tbody>
         </table>
         <div className="button-group">
-          <button className="edit-btn" onClick={onClose}>
-            ✏️ Edit
-          </button>
+          {!undoSuccess && (
+            <button className="undo-btn" onClick={onUndo}>
+              ⏪ Undo
+            </button>
+          )}
+          {!undoSuccess && (
+            <button className="edit-btn" onClick={onEdit}>
+              ✏️ Edit
+            </button>
+          )}
           <button className="close-btn" onClick={onClose}>
-            OK
+            ✅ OK
           </button>
         </div>
       </div>

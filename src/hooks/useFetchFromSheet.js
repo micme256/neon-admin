@@ -5,20 +5,18 @@ const useFetchFromSheet = () => {
   const [response, setResponse] = useState(null);
   const [error, setError] = useState(null);
 
-  const sendRequest = (formData) => {
+  const sendRequest = (formData, requestType) => {
     setLoading(true);
     google.script.run
-      .withSuccessHandler((response) => {
-        setResponse({ ...response });
+      .withSuccessHandler((res) => {
+        setResponse(res);
         setLoading(false);
-        // if (callback) callback(response);
       })
       .withFailureHandler((err) => {
         setError(err);
         setLoading(false);
-        // if (callback) callback(null, err);
       })
-      .addData(formData);
+      .checkRequest(formData, requestType);
   };
 
   return { loading, response, error, sendRequest };

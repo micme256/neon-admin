@@ -1,5 +1,4 @@
 import React from "react";
-import { useState } from "react";
 
 const FormInput = ({
   type = "text",
@@ -11,31 +10,17 @@ const FormInput = ({
   options = [],
   readOnly = false,
   className = "",
+  onChange,
 }) => {
-  const [inputValue, setInputValue] = useState(
-    type === "checkbox" || type === "radio" ? checked : value
-  );
-  const [isSelected, setIsSelected] = useState(checked);
-
   const handleChange = (e) => {
-    switch (type) {
-      case "checkbox":
-      case "radio":
-        setIsSelected(e.target.checked);
-        break;
-      case "select":
-        setInputValue(e.target.value);
-        break;
-      default:
-        setInputValue(e.target.value);
-    }
+    if (onChange) onChange(e);
   };
 
   if (type === "select") {
     return (
       <label>
         {label}
-        <select name={name} value={inputValue} onChange={handleChange} required>
+        <select name={name} value={value} onChange={handleChange} required>
           <option value="" disabled>
             Select option
           </option>
@@ -48,20 +33,6 @@ const FormInput = ({
       </label>
     );
   }
-  if (readOnly) {
-    return (
-      <label>
-        {label}
-        <input
-          type={type}
-          name={name}
-          value={inputValue}
-          readOnly={readOnly}
-          className={className}
-        />
-      </label>
-    );
-  }
 
   return (
     <label>
@@ -69,12 +40,12 @@ const FormInput = ({
       <input
         type={type}
         name={name}
-        key={name}
-        value={type === "checkbox" || type === "radio" ? "" : inputValue}
-        checked={type === "checkbox" || type === "radio" ? isSelected : false}
+        value={value}
+        checked={type === "checkbox" || type === "radio" ? checked : undefined}
         placeholder={placeholder}
-        onChange={handleChange}
+        readOnly={readOnly}
         className={className}
+        onChange={handleChange}
       />
     </label>
   );

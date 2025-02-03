@@ -188,26 +188,26 @@ input:focus {
 
 .button-group {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  gap: 15px;
   margin-top: 15px;
+}
+.button-group button {
+  padding: 8px 15px;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
 }
 
 .edit-btn {
-  padding: 8px 15px;
-  border: none;
   background: orange;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-  border-radius: 5px;
 }
 
 .close-btn {
-  padding: 8px 15px;
-  border: none;
   background: green;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-  border-radius: 5px;
+}
+.undo-btn {
+  background-color: gray;
 }

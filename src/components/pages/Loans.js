@@ -3,6 +3,7 @@ import RecentActivity from "../ui-components/RecentActivity";
 import KeyMetrics from "../ui-components/KeyMetrics";
 import TransactionsForm from "../elements/TransactionsForm";
 import { useContext } from "react";
+import { getInputAttributes } from "../helper-functions/getInputAttributes";
 import { MemberContext } from "../../App";
 
 const Loans = () => {
@@ -81,37 +82,12 @@ const Loans = () => {
         "Thu Jan 05 2023 16:00:00 GMT-0500 (Eastern Standard Time)",
     },
   ];
-  const inputAttributes = [
-    {
-      type: "select",
-      name: "memberId",
-      label: "Member ID",
-      options: members.map((member) => member.memberId),
-    },
-    {
-      type: "number",
-      name: "amount",
-      label: "Amount",
-      value: "",
-    },
-    {
-      type: "select",
-      name: "loanType",
-      label: "Loan type",
-      options: ["short-term", "long-term"], //loan types
-    },
-  ];
 
   return (
     <>
       <KeyMetrics />
       <RecentActivity recentActivity={transactions} />
-      {
-        <TransactionsForm
-          inputAttributes={inputAttributes}
-          formHeader="NEW LOAN"
-        />
-      }
+      {<TransactionsForm transactionType={"loans"} formHeader="NEW LOAN" />}
     </>
   );
 };
