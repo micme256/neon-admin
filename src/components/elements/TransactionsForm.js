@@ -8,11 +8,10 @@ const TransactionsForm = ({
   formHeader = "NEW TRANSACTION",
 }) => {
   const {
-    formValues,
+    transaction,
     response,
     inputAttributes,
     loading,
-    error,
     showFeedback,
     handleChange,
     handleSubmit,
@@ -20,14 +19,14 @@ const TransactionsForm = ({
     handleEdit,
     editMode,
     handleUndo,
-    undoSuccess,
+    undoMode,
   } = useTransactionForm(transactionType);
 
   return (
     <div className="transaction-form">
       <h1>{formHeader}</h1>
       {loading && <p className="loading">Submitting...</p>}
-      {error && <p style={{ color: "red" }}>Error: {error}</p>}
+      {/* {error && <p style={{ color: "red" }}>Error: {response.error}</p>} */}
 
       {!showFeedback && (
         <form onSubmit={handleSubmit}>
@@ -35,7 +34,7 @@ const TransactionsForm = ({
             <FormInput
               key={inputElement.name}
               {...inputElement}
-              value={formValues[inputElement.name] || ""}
+              value={transaction[inputElement.name] || ""}
               onChange={handleChange}
             />
           ))}
@@ -57,7 +56,7 @@ const TransactionsForm = ({
           onClose={handleClose}
           onEdit={handleEdit}
           onUndo={handleUndo}
-          undoSuccess={undoSuccess}
+          undoMode={undoMode}
         />
       )}
     </div>

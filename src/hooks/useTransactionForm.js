@@ -4,21 +4,27 @@ import { formatDate } from "../components/elements/formaDate";
 import { getInputAttributes } from "../components/helper-functions/getInputAttributes";
 import { MemberContext } from "../App";
 
-const useTransactionForm = (componentTransactionType) => {
-  const [formValues, setFormValues] = useState({});
+const useTransactionForm = (transactionType) => {
+  const intialDetails = {
+    transactionType: transactionType,
+    transactionId: "",
+    memberId: "",
+    amount: "",
+    transactionDate: formatDate(new Date()),
+    loanType: "",
+    status: "active",
+  };
+  const [transaction, setTransaction] = useState(intialDetails);
+  const [response, setResponse] = useState(null);
   const [showFeedback, setShowFeedback] = useState(false);
-  const { loading, response, error, sendRequest } = useFetchFromSheet();
+  const { loading, addRequest, editRequest, deleteRequest } =
+    useFetchFromSheet();
   const { members } = useContext(MemberContext);
 
   const [editMode, setEditMode] = useState(false);
-  const [undoSuccess, setUndoSuccess] = useState(false);
-
-  const [transactionType, setTransactionType] = useState(
-    componentTransactionType
-  );
+  const [undoMode, setUndoMode] = useState(false);
 
   const [prevAttributes, setPrevAttributes] = useState([]);
-
   const inputAttributes = useMemo(() => {
     const newFields = getInputAttributes(members, transactionType);
 
@@ -34,9 +40,12 @@ const useTransactionForm = (componentTransactionType) => {
       }
     });
 
-    setPrevAttributes(mergedFields);
     return mergedFields;
   }, [members, transactionType]);
+
+  useEffect(() => {
+    setPrevAttributes(inputAttributes);
+  }, [inputAttributes]);
 
   const getMemberName = (memberId) => {
     const member = members.find((m) => m.memberId === memberId);
@@ -46,9 +55,9 @@ const useTransactionForm = (componentTransactionType) => {
   useEffect(() => {
     if (response?.status === "success") {
       setShowFeedback(true);
-      setFormValues(response.data);
+      setTransaction(response.data);
       if (response?.action === "delete") {
-        setUndoSuccess(true);
+        setUndoMode(true);
       }
     } else {
       console.log(response);
@@ -58,72 +67,59 @@ const useTransactionForm = (componentTransactionType) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    setFormValues((prev) => {
+    setTransaction((prev) => {
       const newValues = { ...prev, [name]: value };
 
       // Auto-update memberName when memberId changes
       if (name === "memberId") {
         newValues["memberName"] = getMemberName(value);
       }
-
-      // Track transactionType changes and clear loanType if necessary
-      if (name === "transactionType") {
-        setTransactionType(value);
-        newValues["loanType"] = ""; // Reset loanType if transactionType changes
-      }
-
       return newValues;
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setShowFeedback(false);
-    let requestType = "addData";
 
-    const rowFormData = new FormData(e.target);
-
-    if (editMode) {
-      rowFormData.append("transactionId", formValues.transactionId);
-      requestType = "editData";
+    try {
+      setShowFeedback(false);
+      let data;
+      if (editMode) {
+        data = await editRequest(transaction);
+      } else {
+        data = await addRequest(transaction);
+      }
+      setResponse(data);
+    } catch (error) {
+      setResponse(error);
     }
-
-    if (!rowFormData.has("transactionType")) {
-      rowFormData.append("transactionType", transactionType);
-    }
-
-    rowFormData.append("transactionDate", formatDate(new Date()));
-    const formData = Object.fromEntries(rowFormData.entries());
-
-    sendRequest(formData, requestType);
   };
 
-  //Restore everything to initual state
   const handleClose = () => {
-    setFormValues({});
+    setTransaction(intialDetails);
     setShowFeedback(false);
-    setTransactionType(componentTransactionType);
     setEditMode(false);
-    setUndoSuccess(false);
+    setUndoMode(false);
   };
   const handleEdit = () => {
     setEditMode(true);
     setShowFeedback(false);
-    // setDataTobeEdited(response.data);
   };
 
-  const handleUndo = () => {
-    const formData = formValues;
-    setShowFeedback(false);
-    sendRequest(formData, "deleteData");
+  const handleUndo = async () => {
+    try {
+      const data = await deleteRequest(transaction);
+      setResponse(data);
+    } catch (error) {
+      setResponse(error);
+    }
   };
 
   return {
-    formValues,
+    transaction,
     response,
     inputAttributes,
     loading,
-    error,
     showFeedback,
     handleChange,
     handleSubmit,
@@ -131,7 +127,7 @@ const useTransactionForm = (componentTransactionType) => {
     handleEdit,
     editMode,
     handleUndo,
-    undoSuccess,
+    undoMode,
   };
 };
 
