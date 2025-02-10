@@ -6,7 +6,6 @@ function doGet() {
 
 //Sending data to sheets
 const addData = (formData) => {
-  Logger.log(formData);
   try {
     const { transactionType } = formData;
     const { data, sheet } = checkSheetData(transactionType);
@@ -31,7 +30,6 @@ const addData = (formData) => {
         addedData[key] = value;
       }
     });
-
     const succesMsg = {
       status: "success",
       action: "action",
@@ -124,6 +122,66 @@ const deleteData = (formData) => {
     };
   }
 };
+//Fetching Data from sheets
+const fetchData = (formData) => {
+  try {
+    const { dataType, memberId, transactionType, limit } = formData;
+    let dataObject;
+
+    if (dataType === "transactions") {
+      dataObject = getTransactionsData(transactionType, memberId, limit);
+    } else {
+      dataObject = getAccountData(memberId);
+    }
+
+    return dataObject;
+  } catch (error) {
+    return {
+      status: "error",
+      message: error.message,
+    };
+  }
+};
+// Retrieve transaction Data
+const getTransactionsData = (transactionType, memberId, limit) => {
+  try {
+    const { data } = checkSheetData(transactionType);
+    const headers = data.shift();
+    let dataObj;
+    if (memberId) {
+      dataObj = data.filter((row) => row[1] === memberId);
+    } else {
+      dataObj = data;
+    }
+    const dateSorted = dataObj.sort((a, b) => {
+      return new Date(b[3]) - new Date(a[3]);
+    });
+    const structuredData = dateSorted.map((row) => {
+      const transaction = {};
+      headers.forEach((header, index) => {
+        transaction[header] = row[index];
+      });
+      return transaction;
+    });
+    const requiredData = structuredData.slice(0, limit || 10);
+    if (requiredData.length == 0) {
+      throw new Error(`No records found`);
+    }
+
+    const succesObj = {
+      status: "success",
+      action: "fetch",
+      message: "Data retrieved successfully",
+      data: requiredData,
+    };
+    return JSON.parse(JSON.stringify(succesObj));
+  } catch (error) {
+    return {
+      status: "error",
+      message: error.message,
+    };
+  }
+};
 
 //Helper function to check sheet and return data
 const checkSheetData = (transactionType) => {
@@ -167,6 +225,7 @@ const requestHandlers = {
   addData: addData,
   editData: editData,
   deleteData: deleteData,
+  fetchData: fetchData,
 };
 
 const checkRequest = (formData, requestType) => {

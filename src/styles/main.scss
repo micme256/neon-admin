@@ -48,6 +48,11 @@ ul {
   font-size: 14px;
   display: flex;
   justify-content: space-between;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  padding: 5px;
+}
+.activity:hover{
+  transform: scale(1.1);
 }
 .activity .fname {
   font-weight: 400;
@@ -63,22 +68,22 @@ ul {
 .activity .date {
   font-size: 14px;
 }
-.trans-type.Deposit {
+.Deposit {
   color: #34c759;
 }
-.trans-type.withdraw {
+.withdraw {
   color: #ff0000;
 }
-.trans-type.loans {
+.loans {
   color: #ffc107;
 }
-.trans-type.savings {
+.savings {
   color: #2196f3;
 }
-.trans-type.shares {
+.shares {
   color: #7a288a;
 }
-.trans-type.penalties {
+.penalties {
   color: #8f0a1a;
 }
 

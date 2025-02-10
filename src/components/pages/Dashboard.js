@@ -2,12 +2,8 @@ import React from "react";
 import KeyMetrics from "../ui-components/KeyMetrics";
 import Contribution from "../ui-components/Contribution";
 import TransactionsForm from "../elements/TransactionsForm";
-import { useContext } from "react";
-import { MemberContext } from "../../App";
-import { getInputAttributes } from "../helper-functions/getInputAttributes";
 
 const Dashboard = () => {
-  const { members } = useContext(MemberContext);
   const contributions = [
     //DUMMY CONTENT
     ["Member ID", "Name", "Savings", "Current Month"],
