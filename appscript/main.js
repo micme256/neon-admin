@@ -4,45 +4,93 @@ function doGet() {
     .addMetaTag("viewport", "width=device-width, initial-scale=1.0");
 }
 
+const checkRequestType = (formData, requestType) => {
+  try {
+    let memberName;
+    if (formData.memberId) {
+      //Check if member exists in database and return Name
+      const members = namesMapedById();
+      memberName = members.get(formData.memberId);
+      if (!memberName) {
+        throw new Error(`Member with ID '${formData.memberId}' not found`);
+      }
+    }
+
+    let result;
+    switch (requestType) {
+      case "addData":
+        result = addData(formData);
+        break;
+      case "editData":
+        result = editData(formData);
+        break;
+      case "deleteData":
+        result = deleteData(formData);
+        break;
+      case "fetchData":
+        result = fetchData(formData);
+        break;
+      default:
+        throw new Error(`Invalid request type: ${requestType}`);
+    }
+    if (result instanceof Error) {
+      throw result;
+    }
+    if (requestType !== "fetchData") {
+      result.memberName = memberName;
+    }
+    const successMsg = {
+      addData: "Data added successfully",
+      editData: "Data edited successfully",
+      deleteData: "Transaction deleted successfully",
+      fetchData: "Data retrieved successfully",
+    };
+    const response = {
+      status: "success",
+      action: requestType,
+      message: successMsg[requestType],
+      data: result,
+    };
+
+    return JSON.parse(JSON.stringify(response));
+  } catch (error) {
+    return {
+      status: "error",
+      message: error.message,
+    };
+  }
+};
+
+/*Data sheets are nemed according to transaction types they store */
+
 //Sending data to sheets
 const addData = (formData) => {
   try {
     const { transactionType } = formData;
     const { data, sheet } = checkSheetData(transactionType);
-
-    const keyRow = sheet.getLastRow() + 1;
     const headers = data[0];
+
+    const rowIndex = sheet.getLastRow() + 1;
+
     formData.transactionId = generateTransactionId(
       transactionType.slice(0, 3).toUpperCase()
     );
-    const addedData = {};
-    addedData.memberName = memberName(formData.memberId);
-    addedData.transactionType = transactionType;
-    if (!addedData.memberName) {
-      throw new Error(`Member with ID '${formData.memberId}' not found`);
-    }
+
+    const addedData = {}; //Response data on success
 
     Object.entries(formData).forEach(([key, value]) => {
-      const keyColumn = headers.indexOf(key) + 1;
-      if (keyColumn) {
-        const dataCell = sheet.getRange(keyRow, keyColumn);
+      const colIndex = headers.indexOf(key) + 1;
+      if (colIndex) {
+        const dataCell = sheet.getRange(rowIndex, colIndex);
         dataCell.setValue(value);
         addedData[key] = value;
       }
     });
-    const succesMsg = {
-      status: "success",
-      action: "action",
-      message: "Data added successfully",
-      data: addedData,
-    };
-    return succesMsg;
+    addedData.transactionType = transactionType;
+
+    return addedData;
   } catch (error) {
-    const errorMsg = {
-      status: "error",
-      message: error.message,
-    };
-    return errorMsg;
+    return error;
   }
 };
 
@@ -52,21 +100,24 @@ const editData = (formData) => {
     const { transactionType, transactionId } = formData;
     const { data, sheet } = checkSheetData(transactionType);
     const headers = data[0];
+
     let updated = false;
     const edittedData = {};
+
     for (let i = 0; i < data.length; i++) {
       if (data[i][0] === transactionId) {
-        const keyRow = i + 1;
+        const rowIndex = i + 1;
         Object.entries(formData).forEach(([key, value]) => {
-          const keyColumn = headers.indexOf(key) + 1;
-          if (keyColumn) {
-            const dataCell = sheet.getRange(keyRow, keyColumn);
+          const colIndex = headers.indexOf(key) + 1;
+          if (colIndex) {
+            const dataCell = sheet.getRange(rowIndex, colIndex);
             dataCell.setValue(value);
             edittedData[key] = value;
           }
         });
-        edittedData.memberName = memberName(formData.memberId);
+
         edittedData.transactionType = transactionType;
+
         updated = true;
         break;
       }
@@ -74,17 +125,9 @@ const editData = (formData) => {
     if (!updated) {
       throw new Error(`Transaction ID '${transactionId}' not found`);
     }
-    return {
-      status: "success",
-      action: "edit",
-      message: "Data updated successfully",
-      data: edittedData,
-    };
+    return edittedData;
   } catch (error) {
-    return {
-      status: "error",
-      message: error.message,
-    };
+    return error;
   }
 };
 
@@ -93,6 +136,7 @@ const deleteData = (formData) => {
   try {
     const { transactionType, transactionId, memberId } = formData;
     const { data, sheet } = checkSheetData(transactionType);
+
     let deleted = false;
     for (let i = 0; i < data.length; i++) {
       if (data[i][0] === transactionId) {
@@ -104,58 +148,70 @@ const deleteData = (formData) => {
     if (!deleted) {
       throw new Error(`Transaction ID '${transactionId}' not found`);
     }
-    const deletedData = {
-      transactionId,
-      memberId,
-      memberName: memberName(formData.memberId),
-    };
-    return {
-      status: "success",
-      action: "delete",
-      message: "Transaction deleted successfully",
-      data: deletedData,
-    };
+
+    return { transactionId };
   } catch (error) {
-    return {
-      status: "error",
-      message: error.message,
-    };
+    return error;
   }
 };
+
 //Fetching Data from sheets
 const fetchData = (formData) => {
   try {
-    const { dataType, memberId, transactionType, limit } = formData;
-    let dataObject;
+    const { dataType, transactionType, limit } = formData;
+    const members = namesMapedById();
 
     if (dataType === "transactions") {
-      dataObject = getTransactionsData(transactionType, memberId, limit);
-    } else {
-      dataObject = getAccountData(memberId);
-    }
+      let recentTransactions = {};
+      const requiredTransactions = [transactionType] || [
+        "loans",
+        "shares",
+        "savings",
+        "penalties",
+        "interest",
+        "loanRepay",
+        "expenditures",
+      ];
+      for (const transactionType of requiredTransactions) {
+        const transactionData = getTypeData(transactionType, limit, members);
 
-    return dataObject;
+        if (transactionData instanceof Error) {
+          throw transactionData;
+        }
+
+        transactionData.forEach((record) => {
+          record.transactionType = transactionType;
+        });
+        recentTransactions.push(...transactionData);
+      }
+
+      recentTransactions.sort((a, b) => {
+        new Date(b.transactionDate) - new Date(a.transactionDate);
+      });
+
+      const requiredNumb = recentTransactions.slice(0, limit);
+
+      if (requiredNumb.length === 0) {
+        throw new Error("No records found");
+      }
+      return requiredNumb;
+    } else {
+      return generalData(formData);
+    }
   } catch (error) {
-    return {
-      status: "error",
-      message: error.message,
-    };
+    return error;
   }
 };
 // Retrieve transaction Data
-const getTransactionsData = (transactionType, memberId, limit) => {
+const getTypeData = (transactionType, limit, members) => {
   try {
     const { data } = checkSheetData(transactionType);
     const headers = data.shift();
-    let dataObj;
-    if (memberId) {
-      dataObj = data.filter((row) => row[1] === memberId);
-    } else {
-      dataObj = data;
-    }
+
     const dateSorted = dataObj.sort((a, b) => {
       return new Date(b[3]) - new Date(a[3]);
     });
+
     const structuredData = dateSorted.map((row) => {
       const transaction = {};
       headers.forEach((header, index) => {
@@ -163,72 +219,28 @@ const getTransactionsData = (transactionType, memberId, limit) => {
       });
       return transaction;
     });
+
     const requiredData = structuredData.slice(0, limit || 10);
-    if (requiredData.length == 0) {
-      throw new Error(`No records found`);
-    }
 
-    const succesObj = {
-      status: "success",
-      action: "fetch",
-      message: "Data retrieved successfully",
-      data: requiredData,
-    };
-    return JSON.parse(JSON.stringify(succesObj));
-  } catch (error) {
-    return {
-      status: "error",
-      message: error.message,
-    };
-  }
-};
-
-//Helper function to check sheet and return data
-const checkSheetData = (transactionType) => {
-  try {
-    const sheetName = transactionType;
-    const sheet =
-      SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
-    if (!sheet) {
-      throw new Error(`Transaction '${sheetName}' not found`);
-    }
-    const data = sheet.getDataRange().getValues();
-    return { data, sheet };
+    return requiredData;
   } catch (error) {
     return error;
   }
 };
 
-//Helper function to get member name
-const memberName = (memberId) => {
-  const sheetName = "Database";
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
-  const data = sheet.getDataRange().getValues();
-  for (let i = 0; i < data.length; i++) {
-    if (data[i][0] === memberId) {
-      return data[i][1];
-    }
+const getGeneralData = () => {
+  try {
+    const { data: metricsData } = checkSheetData("metrics");
+    const { data: accountsData } = checkSheetData("accounts");
+
+    const [metricKeys, metricValues] = metricsData;
+    const metricObj = {};
+    metricKeys.forEach((key, index) => {
+      metricObj[key] = metricValues[index];
+    });
+
+    return { accountsData, metricObj };
+  } catch (error) {
+    return error;
   }
-};
-
-//Helper function to generate transaction IDs
-const generateTransactionId = (prefix) => {
-  const date = new Date();
-  const year = date.getFullYear().toString().slice(-2);
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const randomPart = Math.random().toString(36).slice(2, 7).toUpperCase();
-  return `${prefix}${year}${month}${day}-${randomPart}`;
-};
-
-const requestHandlers = {
-  addData: addData,
-  editData: editData,
-  deleteData: deleteData,
-  fetchData: fetchData,
-};
-
-const checkRequest = (formData, requestType) => {
-  const handler = requestHandlers[requestType];
-  return handler ? handler(formData) : addData(formData);
 };

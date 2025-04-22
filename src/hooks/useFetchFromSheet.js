@@ -15,7 +15,7 @@ const useFetchFromSheet = () => {
           setLoading(false);
           reject(error);
         })
-        .checkRequest(formData, requestType);
+        .checkRequestType(formData, requestType);
     });
   };
 
