@@ -31,7 +31,9 @@ const Form = ({
             key={inputElement.label}
             name={inputElement.name || inputElement.label}
             {...inputElement}
-            value={formData[inputElement.name] || inputElement.label || ""}
+            value={
+              formData[inputElement.name] || formData[inputElement.label] || ""
+            }
             onChange={handleChange}
           />
         ))}
