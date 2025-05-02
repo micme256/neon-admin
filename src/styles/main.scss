@@ -38,7 +38,7 @@ ul {
 }
 
 //RECENT ACTIVITY
-.recent-activty {
+.recent-activity {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -48,11 +48,15 @@ ul {
   font-size: 14px;
   display: flex;
   justify-content: space-between;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  padding: 5px;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s, box-shadow 0.3s;
 }
-.activity:hover{
-  transform: scale(1.1);
+.activity:hover,
+.activity:focus-within {
+  background-color: var(--focused-color);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 .activity .fname {
   font-weight: 400;
@@ -68,23 +72,53 @@ ul {
 .activity .date {
   font-size: 14px;
 }
-.Deposit {
+.trans-type.Deposit {
   color: #34c759;
 }
-.withdraw {
+.trans-type.withdraw {
   color: #ff0000;
 }
-.loans {
+.trans-type.loans {
   color: #ffc107;
 }
-.savings {
+.trans-type.savings {
   color: #2196f3;
 }
-.shares {
+.trans-type.shares {
   color: #7a288a;
 }
-.penalties {
+.trans-type.penalties {
   color: #8f0a1a;
+}
+
+.trans-delete-btn {
+  background: red;
+}
+
+.trans-edit-btn {
+  background: orange;
+}
+.trans-clear-btn {
+  background: #6c757d;
+}
+
+.activity-right .closed {
+  color: #6c757d;
+}
+
+.activity-right .active {
+  color: #198754;
+}
+
+.activity-right .approved {
+  color: #0d6efd;
+}
+
+.activity-right .pending {
+  color: #ffc107;
+}
+.activity-right .overdue {
+  color: red;
 }
 
 //TRANSACTION FORMS
@@ -215,4 +249,107 @@ input:focus {
 }
 .undo-btn {
   background-color: gray;
+}
+//Members Table
+.contribution {
+  padding: 1rem;
+  border-radius: 10px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  overflow-x: auto;
+  margin-top: 1rem;
+}
+
+.contribution table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.contribution thead {
+  background-color: #004080;
+  color: #fff;
+}
+
+.contribution th,
+.contribution td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+  white-space: nowrap;
+}
+
+.contribution tbody tr:nth-child(even) {
+  background-color: #f5f9ff;
+}
+
+.contribution tbody tr:hover {
+  background-color: #e9f3ff;
+}
+
+.contribution td:nth-child(3) {
+  color: #2e7d32;
+  font-weight: 500;
+}
+
+.contribution td:nth-child(4) {
+  color: #1565c0;
+  font-weight: 500;
+}
+
+@media (max-width: 480px) {
+  .contribution th,
+  .contribution td {
+    padding: 8px;
+    font-size: 0.85rem;
+  }
+
+  .contribution {
+    padding: 0.5rem;
+  }
+}
+//APP loading screen
+.loading-screen {
+  padding: 3rem;
+  font-size: 1.5rem;
+  text-align: center;
+  color: #555;
+}
+
+/* === KEY METRICS === */
+.key-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+  padding: 1rem;
+}
+
+.key-metrics .data-item {
+  background-color: #f7f9fb;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: default;
+}
+
+.key-metrics .data-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+}
+
+.key-metrics .data-item h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.key-metrics .data-item p,
+.key-metrics .data-item .amount {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #111;
 }

@@ -20,6 +20,7 @@ const checkRequestType = (formData, requestType) => {
     switch (requestType) {
       case "addData":
         result = addData(formData);
+        // transactionEmail(result);
         break;
       case "editData":
         result = editData(formData);
@@ -65,6 +66,8 @@ const checkRequestType = (formData, requestType) => {
 
 //Sending data to sheets
 const addData = (formData) => {
+  formData.transactionDate = convertToDate(formData.transactionDate);
+
   try {
     const { transactionType } = formData;
     const { data, sheet } = checkSheetData(transactionType);
@@ -86,6 +89,17 @@ const addData = (formData) => {
         addedData[key] = value;
       }
     });
+    // ⏪ Recurse interest repayment if it's a loanRepay transaction
+    if (transactionType === "loanRepay" && formData.pendingInterest) {
+      const interestForm = {
+        ...formData,
+        transactionType: "interest",
+        amount: formData.pendingInterest,
+      };
+      const interestData = addData(interestForm);
+      addedData.interest = interestData.amount;
+      addedData.interestTransId = interestData.transactionId;
+    }
     addedData.transactionType = transactionType;
 
     return addedData;
@@ -96,6 +110,8 @@ const addData = (formData) => {
 
 //Editing Sheet data
 const editData = (formData) => {
+  formData.transactionDate = convertToDate(formData.transactionDate);
+
   try {
     const { transactionType, transactionId } = formData;
     const { data, sheet } = checkSheetData(transactionType);
@@ -134,13 +150,16 @@ const editData = (formData) => {
 //Deleting data from the sheets
 const deleteData = (formData) => {
   try {
-    const { transactionType, transactionId, memberId } = formData;
+    let { transactionType, transactionId } = formData;
+    if (transactionType === "loans") {
+      transactionType = "newLoan";
+    }
     const { data, sheet } = checkSheetData(transactionType);
 
     let deleted = false;
     for (let i = 0; i < data.length; i++) {
       if (data[i][0] === transactionId) {
-        sheet.deleteRow(i + 1);
+        sheet.getRange(i + 1, 1, 1, sheet.getLastColumn()).clearContent();
         deleted = true;
         break;
       }
@@ -162,16 +181,18 @@ const fetchData = (formData) => {
     const members = namesMapedById();
 
     if (dataType === "transactions") {
-      let recentTransactions = {};
-      const requiredTransactions = [transactionType] || [
-        "loans",
-        "shares",
-        "savings",
-        "penalties",
-        "interest",
-        "loanRepay",
-        "expenditures",
-      ];
+      let recentTransactions = [];
+      const requiredTransactions = transactionType
+        ? [transactionType]
+        : [
+            "loans",
+            "savings",
+            "penalties",
+            "interest",
+            "loanRepay",
+            "expenditures",
+          ];
+
       for (const transactionType of requiredTransactions) {
         const transactionData = getTypeData(transactionType, limit, members);
 
@@ -185,9 +206,9 @@ const fetchData = (formData) => {
         recentTransactions.push(...transactionData);
       }
 
-      recentTransactions.sort((a, b) => {
-        new Date(b.transactionDate) - new Date(a.transactionDate);
-      });
+      recentTransactions.sort(
+        (a, b) => new Date(b.transactionDate) - new Date(a.transactionDate)
+      );
 
       const requiredNumb = recentTransactions.slice(0, limit);
 
@@ -196,7 +217,7 @@ const fetchData = (formData) => {
       }
       return requiredNumb;
     } else {
-      return generalData(formData);
+      return getGeneralData();
     }
   } catch (error) {
     return error;
@@ -208,7 +229,7 @@ const getTypeData = (transactionType, limit, members) => {
     const { data } = checkSheetData(transactionType);
     const headers = data.shift();
 
-    const dateSorted = dataObj.sort((a, b) => {
+    const dateSorted = data.sort((a, b) => {
       return new Date(b[3]) - new Date(a[3]);
     });
 
@@ -217,6 +238,9 @@ const getTypeData = (transactionType, limit, members) => {
       headers.forEach((header, index) => {
         transaction[header] = row[index];
       });
+
+      transaction.memberName = members.get(transaction.memberId) || "Unknown";
+
       return transaction;
     });
 

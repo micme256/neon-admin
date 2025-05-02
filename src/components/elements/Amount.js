@@ -1,5 +1,5 @@
 import React from "react";
-import { formatAmount } from "./formatAmount";
+import { formatAmount } from "../helper-functions/formatAmount";
 
 const Amount = ({ amount }) => {
   return (
