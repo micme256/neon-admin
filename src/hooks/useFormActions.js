@@ -10,6 +10,10 @@ const useFormActions = () => {
   const submitForm = async (formData, isEditing) => {
     try {
       formData.transactionDate = formatDate(formData.transactionDate);
+      if (formData.transactionType === "newLoan") {
+        formData.status = "active";
+      }
+
       const response = isEditing
         ? await editRequest(formData)
         : await addRequest(formData);
