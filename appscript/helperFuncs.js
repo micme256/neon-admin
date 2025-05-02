@@ -18,11 +18,16 @@ const namesMapedById = () => {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
 
   const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+
+  const memberIdIndex = headers.indexOf("No/ID");
+  const memberNameIndex = headers.indexOf("first Name");
+
   const memberMap = new Map();
 
   for (let i = 0; i < data.length; i++) {
-    const memberId = data[i][0];
-    const memberName = data[i][2];
+    const memberId = data[i][memberIdIndex];
+    const memberName = data[i][memberNameIndex];
     memberMap.set(memberId, memberName);
   }
 
