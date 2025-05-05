@@ -21,7 +21,7 @@ const updateMonthlyMetrics = () => {
 
   metrics["Total Members"] = 15;
   metrics["Financial year"] = financialYear;
-  metrics["month"] = accountingMonthName;
+  metrics["Month"] = accountingMonthName;
   metrics["Opening Balance"] = getOpeningBalance(monthMetricsData);
   metrics["Loans Disbursed Count"] = countRecords(monthlyLoansData);
   metrics["Loans Disbursed Amount"] = sumColumn(monthlyLoansData, "amount");
@@ -40,13 +40,6 @@ const updateMonthlyMetrics = () => {
   metrics["Savings Arrears Amount"] =
     metrics["Expected Savings"] - metrics["Members Who Saved Count"] * 20000;
 
-  Logger.log("Opening Balance: " + metrics["Opening Balance"]);
-  Logger.log("Total Savings Collected: " + metrics["Total Savings Collected"]);
-  Logger.log("Interest Received Total: " + metrics["Interest Received Total"]);
-  Logger.log("Total Expenses Incurred: " + metrics["Total Expenses Incurred"]);
-  Logger.log("Loans Repaid Amount: " + metrics["Loans Repaid Amount"]);
-  Logger.log("Loans Disbursed Amount: " + metrics["Loans Disbursed Amount"]);
-
   metrics["Ending Balance"] =
     metrics["Opening Balance"] +
     metrics["Total Savings Collected"] +
@@ -54,7 +47,6 @@ const updateMonthlyMetrics = () => {
     metrics["Total Expenses Incurred"] +
     metrics["Loans Repaid Amount"] -
     metrics["Loans Disbursed Amount"];
-  Logger.log("Ending Balance: " + metrics["Ending Balance"]);
 
   addMetricsToSheet(metrics, monthMetricsSheet, monthMetricsData);
 };
