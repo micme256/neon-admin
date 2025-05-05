@@ -17,7 +17,7 @@ const getTableDirectly = (sheetName) => {
 const getSheetData = (sheetName) => {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
   const data = sheet.getDataRange().getDisplayValues();
-  return data;
+  return { data, sheet };
 };
 
 const formatDate = (date) => {
@@ -115,12 +115,11 @@ const countRecords = (data) => data.length - 1;
 const sumColumn = (data, columnHeader) => {
   const headers = data[0];
   const columnIndex = headers.indexOf(columnHeader);
-
   if (columnIndex === -1) {
     throw new Error(`Column '${columnHeader}' not found`);
   }
-
-  return data
-    .slice(1)
-    .reduce((sum, row) => sum + (parseFloat(row[columnIndex]) || 0), 0);
+  return data.slice(1).reduce((sum, row) => {
+    const value = row[columnIndex].replace(/,/g, ""); // Remove commas
+    return sum + (parseFloat(value) || 0);
+  }, 0);
 };
