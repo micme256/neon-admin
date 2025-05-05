@@ -1,33 +1,24 @@
 const monthPdfReport = () => {
   const date = new Date();
-  const month = date.toLocaleString("default", { month: "long" });
-  const year = date.getFullYear();
+  const lastMonthDate = new Date(date.getFullYear(), date.getMonth() - 1, 1);
 
-  const monthSummaryData = getSheetData("Monthly metrics");
-  const summaryHeaders = monthSummaryData[0];
-  const summaryValues = monthSummaryData[1];
-  const keyValuePairs = summaryHeaders.map((key, index) => [
-    key,
-    summaryValues[index],
-  ]);
+  const month = lastMonthDate.toLocaleString("default", { month: "long" });
+  const currentMonth = date.toLocaleString("default", { month: "long" });
 
-  const monthlySummaryTable = createTableHtml(keyValuePairs);
+  const year = lastMonthDate.getFullYear();
+  const currentYear = date.getFullYear();
 
-  //COVERTING MONTHLY DATA TO EASILY READ VALUES
-  const summaryData = summaryHeaders.reduce((acc, key, i) => {
-    acc[key] = summaryValues[i];
-    return acc;
-  }, {});
-
-  const accountsDataTable = getTableDirectly("accounts"); //General member accounts
-
-  const loansData = getSheetData("loans");
-  const activeLoansTable = getLoansTable(filterbyStatus(loansData, "active"));
-  const overdueLoansTable = getLoansTable(filterbyStatus(loansData, "overdue"));
-  const monthlyLoansDataTable = getLoansTable(filterByCurrentMonth(loansData));
-
-  const monthLySavingsTable = monthlyDataTale("savings");
-  const monthlyExpensesTable = monthlyDataTale("expenditures");
+  const {
+    accountsDataTable,
+    monthlyLoansDataTable,
+    activeLoansTable,
+    overdueLoansTable,
+    monthlyLoansRepayTable,
+    monthLySavingsTable,
+    monthlyExpensesTable,
+    executiveSammaryTable,
+    summaryData,
+  } = computeReportData();
 
   let pdfContent =
     "<h1 style='text-align: center; font-family: Times New Roman; text-transform: uppercase;'>NEON SAVINGS ASSOCIATION</h1>";
@@ -45,12 +36,19 @@ const monthPdfReport = () => {
     ")" +
     "</h2>";
   pdfContent +=
-    "<p style ='text-align: left; font-family: Times New Roman;'><strong>Period: </strong> Month of " +
+    "<p style ='text-align: left; font-family: Times New Roman;'><strong>Period: </strong> 8th/ " +
     month +
+    "/" +
+    year +
+    " - " +
+    "7th/" +
+    currentMonth +
+    "/" +
+    currentYear +
     "</p>";
   pdfContent +=
     "<h2 style='text-align: center; font-family: Times New Roman; text-transform: uppercase;'>EXECUTIVE SUMMARY</h2>";
-  pdfContent += monthlySummaryTable;
+  pdfContent += executiveSammaryTable;
   pdfContent +=
     "<h2 style='font-family: Times New Roman; text-transform: uppercase;'> 1. INTRODUCTION</h2>";
   pdfContent +=
@@ -95,9 +93,9 @@ const monthPdfReport = () => {
     year +
     ". There are currently " +
     summaryData["No. of active loans"] +
-    " active loan(s) including " +
+    " active loan(s) and " +
     summaryData["No. of overdue loans"] +
-    " loan(s) that are overdue. These are loans that have been disbursed to members but are yet to be fully settled. Tracking active loans is essential to assess the group's current credit exposure, outstanding balances, and member obligations.</p>";
+    " loan(s) that is/are overdue. These are loans that have been disbursed to members but are yet to be fully settled. Tracking active loans is essential to assess the group's current credit exposure, outstanding balances, and member obligations.</p>";
   pdfContent +=
     "<p style='text-align: left; font-family: Times New Roman;'>The table below outlines all current active loans, enabling the SACCO leadership to monitor performance, identify risks, and make informed financial decisions.</p>";
 
@@ -107,6 +105,11 @@ const monthPdfReport = () => {
   pdfContent +=
     "<p style='text-align: left; font-family: Times New Roman;'>Overdue loans represent amounts that have not been repaid within the agreed loan duration, indicating delays in loan servicing obligations by members. Some of these members may have made communication with the loans committee and were given a grace period. According to our loans policy, instant loans mature in not more than two months while short-term loans mature in a period agreed apon on application and must be between 3-6 months. Timely identification of these loans is critical for initiating recovery measures and maintaining healthy cash flow within the group.</p>";
   pdfContent += overdueLoansTable;
+  pdfContent +=
+    "<h3 style='font-family: Times New Roman; text-transform: uppercase;'>3.2. LOAN REPAYMENT ACTIVITY</h3>";
+  pdfContent +=
+    "<p style='text-align: left; font-family: Times New Roman;'>The table below is a summary of the loan repayment activity for this month.</p>";
+  pdfContent += monthlyLoansRepayTable;
   pdfContent +=
     "<h2 style='font-family: Times New Roman; text-transform: uppercase;'>4. SAVINGS</h2>";
   pdfContent +=

@@ -1,6 +1,6 @@
 const monthlyDataTale = (sheetName) => {
   const data = getSheetData(sheetName);
-  const monthlyData = filterByCurrentMonth(data);
+  const monthlyData = filterByDateRange(data);
   return createTableHtml(monthlyData);
 };
 
@@ -44,6 +44,25 @@ const createTableHtml = (data) => {
 
   return tableHtml;
 };
+
+const filterByDateRange = (data) => {
+  const headers = data[0];
+
+  const endDate = new Date();
+  const startDate = new Date(endDate);
+
+  startDate.setMonth(startDate.getMonth() - 1);
+  startDate.setDate(startDate.getDate() + 1);
+
+  return [
+    headers,
+    ...data.slice(1).filter((row) => {
+      const issueDate = new Date(row[headers.indexOf("transactionDate")]);
+      return issueDate >= startDate && issueDate <= endDate;
+    }),
+  ];
+};
+
 const filterByCurrentMonth = (data) => {
   const headers = data[0];
   const currentMonth = new Date().getMonth();
@@ -89,4 +108,19 @@ const loansSummary = (data) => {
   );
 
   return data.map((row) => requiredIndices.map((index) => row[index]));
+};
+
+const countRecords = (data) => data.length - 1;
+
+const sumColumn = (data, columnHeader) => {
+  const headers = data[0];
+  const columnIndex = headers.indexOf(columnHeader);
+
+  if (columnIndex === -1) {
+    throw new Error(`Column '${columnHeader}' not found`);
+  }
+
+  return data
+    .slice(1)
+    .reduce((sum, row) => sum + (parseFloat(row[columnIndex]) || 0), 0);
 };
