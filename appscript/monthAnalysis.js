@@ -1,10 +1,16 @@
 const computeReportData = () => {
-  const savingsData = getSheetData("savings");
-  const loansData = getSheetData("loans");
-  const loanRepayData = getSheetData("loanRepay");
-  const expendituresData = getSheetData("expenditures");
-  const accountsData = getSheetData("accounts");
-  const interestData = getSheetData("interest");
+  const savingsData = getSheetData("savings").data;
+  const loansData = getSheetData("loans").data;
+  const loanRepayData = getSheetData("loanRepay").data;
+  const expendituresData = getSheetData("expenditures").data;
+  const interestData = getSheetData("interest").data;
+  const accountsData = getSheetData("accounts").data;
+  const { data: monthlyMetrics } = getSheetData("Monthly metrics");
+
+  const monthlyMetricsData = getMonthlyMetricsData(monthlyMetrics);
+  const executiveSammaryTable = createTableHtml(
+    Object.entries(monthlyMetricsData)
+  );
 
   const accountsDataTable = createTableHtml(accountsData); //General member accounts
 
@@ -30,40 +36,6 @@ const computeReportData = () => {
   const monthlyExpensesData = filterByDateRange(expendituresData);
   const monthlyExpensesTable = createTableHtml(monthlyExpensesData);
 
-  const metrics = {};
-  metrics["Total Members"] = countRecords(accountsData) - 2; //Remove closed accounts, better solution LATER
-  metrics["Membership fee"] = 400000; // remove hard coded value LATER
-  metrics["Expected savings"] = metrics["Total Members"] * 20000; //Each member saves 20000 minimum
-  metrics["No. of members who saved"] = countRecords(monthlySavingsData); //Members may save twice, resolve LATER
-  metrics["Total savings collected"] = sumColumn(monthlySavingsData, "amount");
-  metrics["Savings arrears"] =
-    metrics["Expected savings"] - metrics["No. of members who saved"] * 20000;
-  metrics["Cummulative savings"] = sumColumn(accountsData, "Savings");
-
-  metrics["No. of Loans issued"] = countRecords(monthlyLoansData);
-  metrics["Loans sum issued"] = sumColumn(monthlyLoansData, "amount");
-  metrics["Loan sum Repaid"] = sumColumn(monthlyLoansRepayData, "amount");
-  metrics["Outstanding Loan Bal"] = sumColumn(monthlyLoansData, "loanBalance");
-  metrics["No. of active loans"] = countRecords(activeLoansData);
-  metrics["No. of overdue loans"] = countRecords(overdueLoansData);
-  metrics["Overdue Loan sum"] = sumColumn(overdueLoansData, "loanBalance");
-  metrics["Total Interest recieved"] = sumColumn(monthlyInterestData, "amount");
-  metrics["Cumulative interest"] = sumColumn(interestData, "amount");
-  metrics["Total expenses this month"] = sumColumn(
-    monthlyExpensesData,
-    "amount"
-  );
-  metrics["Cummulative expenses"] = sumColumn(expendituresData, "amount");
-  metrics["Bank Balance"] =
-    metrics["Cummulative savings"] +
-    metrics["Cumulative interest"] -
-    metrics["Cummulative expenses"] +
-    metrics["Membership fee"] -
-    metrics["Outstanding Loan Bal"];
-
-  const executiveSammaryTable = createTableHtml(Object.entries(metrics));
-  const summaryData = metrics;
-
   return {
     accountsDataTable,
     monthlyLoansDataTable,
@@ -73,6 +45,30 @@ const computeReportData = () => {
     monthLySavingsTable,
     monthlyExpensesTable,
     executiveSammaryTable,
-    summaryData,
+    monthlyMetricsData,
   };
+};
+
+const getMonthlyMetricsData = (metrics) => {
+  const { financialYear, accountingMonthName } = getFinancialYearAndMonth();
+  const headers = metrics[0];
+  const monthColumn = headers.indexOf("Month");
+  const financialYearColumn = headers.indexOf("Financial year");
+
+  const monthlyMetricsRecord = metrics
+    .slice(1)
+    .find(
+      (row) =>
+        row[monthColumn] === accountingMonthName &&
+        row[financialYearColumn] === financialYear
+    );
+
+  if (!monthlyMetricsRecord) return {};
+
+  const monthlyMetricsObject = headers.reduce((obj, header, index) => {
+    obj[header] = monthlyMetricsRecord[index];
+    return obj;
+  }, {});
+
+  return monthlyMetricsObject;
 };
