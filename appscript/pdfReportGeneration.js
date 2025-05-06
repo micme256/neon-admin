@@ -17,10 +17,10 @@ const sendReportToMgt = (file, month, year) => {
   const subject = `📊 NEON Monthly Report - ${month} ${year}`;
   const body = `Dear Team,
   
-  Please find attached the NEON Monthly Report for ${month} ${year}. The report includes savings, loan activities, withdrawals, and financial summaries for the month.
-  
-  Regards,
-  NEON System`;
+Please find attached the NEON Monthly Report for ${month} ${year}. The report includes savings, loan activities, withdrawals, and financial summaries for the month.
+
+Regards,
+NEON System`;
 
   MailApp.sendEmail({
     to: recipients,
