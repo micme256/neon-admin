@@ -1,9 +1,5 @@
 const sendEmails = (subject, body, email) => {
-  MailApp.sendEmail({
-    to: email,
-    subject: subject,
-    htmlBody: body,
-  });
+  GmailApp.sendEmail(email, subject, body);
 };
 
 const emailsById = (memberId) => {
